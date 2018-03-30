@@ -4,13 +4,13 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.springframework.samples</groupId>
-  <artifactId>springboot-petclinic</artifactId>
-  <version>1.4.1</version>
+  <artifactId>spring-petclinic</artifactId>
+  <version>2.0.0.BUILD-SNAPSHOT</version>
 
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>1.4.1.RELEASE</version>
+    <version>2.0.0.RELEASE</version>
   </parent>
   <name>petclinic</name>
 
@@ -25,9 +25,7 @@
     <webjars-bootstrap.version>3.3.6</webjars-bootstrap.version>
     <webjars-jquery-ui.version>1.11.4</webjars-jquery-ui.version>
     <webjars-jquery.version>2.2.4</webjars-jquery.version>
-
-    <thymeleaf.version>3.0.2.RELEASE</thymeleaf.version>
-    <thymeleaf-layout-dialect.version>2.0.4</thymeleaf-layout-dialect.version>
+    <wro4j.version>1.8.0</wro4j.version>
 
     <cobertura.version>2.7</cobertura.version>
 
@@ -67,8 +65,13 @@
       <artifactId>hsqldb</artifactId>
       <scope>runtime</scope>
     </dependency>
+    <dependency>
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
+      <scope>runtime</scope>
+    </dependency>
 
-    <!-- EhCache -->
+    <!-- caching -->
     <dependency>
       <groupId>javax.cache</groupId>
       <artifactId>cache-api</artifactId>
@@ -81,7 +84,7 @@
     <!-- webjars -->
     <dependency>
       <groupId>org.webjars</groupId>
-      <artifactId>webjars-locator</artifactId>
+      <artifactId>webjars-locator-core</artifactId>
     </dependency>
     <dependency>
       <groupId>org.webjars</groupId>
@@ -114,7 +117,7 @@
         <artifactId>spring-boot-maven-plugin</artifactId>
         <executions>
           <execution>
-            <!-- Spring Boot Actuator displays build-related information 
+            <!-- Spring Boot Actuator displays build-related information
               if a META-INF/build-info.properties file is present -->
             <goals>
               <goal>build-info</goal>
@@ -147,7 +150,7 @@
         </executions>
       </plugin>
 
-      <!-- Spring Boot Actuator displays build-related information if a git.properties 
+      <!-- Spring Boot Actuator displays build-related information if a git.properties
         file is present at the classpath -->
       <plugin>
         <groupId>pl.project13.maven</groupId>
@@ -165,82 +168,36 @@
           <generateGitPropertiesFile>true</generateGitPropertiesFile>
           <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties
           </generateGitPropertiesFilename>
+          <failOnNoGitDirectory>false</failOnNoGitDirectory>
         </configuration>
       </plugin>
 
       <plugin>
-        <!-- right now lesscss maven plugin does NOT support @Import from 
-          classpath https://github.com/marceloverdijk/lesscss-maven-plugin/issues/72 
-          workaround here will be unpacking the bootstrap on-the-fly remove this plugin 
-          config when the issue is resolved OR a better resolution is found -->
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
+        <groupId>ro.isdc.wro4j</groupId>
+        <artifactId>wro4j-maven-plugin</artifactId>
+        <version>${wro4j.version}</version>
         <executions>
           <execution>
-            <id>unpack</id>
-            <phase>process-resources</phase>
+            <phase>generate-resources</phase>
             <goals>
-              <goal>unpack</goal>
+              <goal>run</goal>
             </goals>
-            <configuration>
-              <artifactItems>
-                <artifactItem>
-                  <groupId>org.webjars</groupId>
-                  <artifactId>bootstrap</artifactId>
-                  <version>${webjars-bootstrap.version}</version>
-                  <overWrite>false</overWrite>
-                  <outputDirectory>${project.basedir}/target/less
-                  </outputDirectory>
-                  <includes>**/*.less</includes>
-                </artifactItem>
-              </artifactItems>
-            </configuration>
           </execution>
         </executions>
-      </plugin>
-
-      <plugin>
-        <artifactId>maven-resources-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>copy-resources</id>
-            <phase>validate</phase>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${project.build.directory}/less</outputDirectory>
-              <resources>
-                <resource>
-                  <directory>src/main/less</directory>
-                  <filtering>true</filtering>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
-      <plugin>
-        <groupId>org.lesscss</groupId>
-        <artifactId>lesscss-maven-plugin</artifactId>
-        <version>1.7.0.1.1</version>
         <configuration>
-          <sourceDirectory>${project.build.directory}/less</sourceDirectory>
-          <outputDirectory>${project.build.directory}/classes/static/resources/css</outputDirectory>
-          <compress>true</compress>
-          <includes>
-            <include>petclinic.less</include>
-          </includes>
+          <wroManagerFactory>ro.isdc.wro.maven.plugin.manager.factory.ConfigurableWroManagerFactory</wroManagerFactory>
+          <cssDestinationFolder>${project.build.directory}/classes/static/resources/css</cssDestinationFolder>
+          <wroFile>${basedir}/src/main/wro/wro.xml</wroFile>
+          <extraConfigFile>${basedir}/src/main/wro/wro.properties</extraConfigFile>
+          <contextFolder>${basedir}/src/main/less</contextFolder>
         </configuration>
-        <executions>
-          <execution>
-            <phase>process-resources</phase>
-            <goals>
-              <goal>compile</goal>
-            </goals>
-          </execution>
-        </executions>
+        <dependencies>
+          <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>bootstrap</artifactId>
+            <version>${webjars-bootstrap.version}</version>
+          </dependency>
+        </dependencies>
       </plugin>
     </plugins>
   </build>
@@ -260,5 +217,13 @@
       </plugin>
     </plugins>
   </reporting>
+
+  <!-- Apache 2 license -->
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+    </license>
+  </licenses>
 
 </project>
